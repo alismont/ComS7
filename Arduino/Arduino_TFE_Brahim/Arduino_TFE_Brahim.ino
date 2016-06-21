@@ -221,10 +221,11 @@ void loop()
   else {
     B3[6] = 0;
   }
+  
 valTest= digitalRead(pin52);
 
   //Tempo
-  if (!digitalRead(pin2)) {          //---- crt pv insuffisant ok balancing avec chargeur
+  if (!digitalRead(pin2)) {          //
     CptT[2] = true;
   }
   else {
