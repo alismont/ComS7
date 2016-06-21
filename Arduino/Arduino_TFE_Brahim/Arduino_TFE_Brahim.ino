@@ -1,8 +1,7 @@
 /*----------------------------------------------------------------------
   DB Get Demo
 
-  Created 19 Nov 2013
-  by Davide Nardella
+BRAHIM 
 
   ------------------------------------------------------------------------
   This demo shows how to upload an entire DB from the PLC without
