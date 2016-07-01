@@ -1,7 +1,7 @@
 /*----------------------------------------------------------------------
   DB Get Demo
 
-BRAHIM 
+  BRAHIM
 
   ------------------------------------------------------------------------
   This demo shows how to upload an entire DB from the PLC without
@@ -33,7 +33,7 @@ BRAHIM
 
 File myFile;
 int i = 0;
-int val = 0, valMemo = 0,valTest=0;
+int val = 0, valMemo = 0, valTest = 0;
 bool Oneshot1 = false;
 int DBs;
 int Buf;
@@ -46,12 +46,13 @@ char octetReceptionProc;
 char caractereReceptionProc;
 String chaineReception, Tram;
 String chaineReceptionProc, TramProc;
-int NumeroDB = 1;
+uint16_t NumeroDB = 1;
 char octetReceptionTBL;
 char caractereReceptionTBL;
 char octetReceptionProcTBL;
 String chaineReceptionTBL;
 String TramTBL = "";
+int MotClignotant = 0;
 
 String NumDB;
 char charVal[10];
@@ -102,7 +103,6 @@ void setup() {
   Serial3.begin(9600);
 
   Timer1.initialize(100000);         // initialize timer1
-  //Timer1.setPeriod(100);
   Timer1.attachInterrupt(callback);
 
 
@@ -192,7 +192,7 @@ void CheckError(int ErrNo)
 }
 //----------------------------------------------------------------------
 // Profiling routines
-//                                           vvvvvvvvvvvvvvvvvvvvvvvvvvvvvcccc----------------------------------------------------------------------
+//
 void MarkTime()
 {
   Elapsed = millis();
@@ -221,22 +221,63 @@ void loop()
   else {
     B3[6] = 0;
   }
-  
-valTest= digitalRead(pin52);
 
-  //Tempo
-  if (!digitalRead(pin2)) {          //
+  valTest = digitalRead(pin52);
+
+  //Tempo TON
+  if (!digitalRead(pin2)) {
     CptT[2] = true;
   }
   else {
     T[2] =  0.0;
     TDN[2] =  0.0;
   }
-  if (T[2] >= 10) {
+  if (T[2] >= 100) {
     TDN[2] =  1.0;
-    T[2] = 10;
+    T[2] = 100;
     CptT[2] = false;
+    //valMemo = 1;
+  }
+
+
+
+  if (!digitalRead(pin2) && MotClignotant == 0 ) {
+    CptT[3] = true;
+  }
+  else {
+    T[3] =  0.0;
+    TDN[3] =  0.0;
+    T[3]  = 0.0;
+  }
+  if (T[3] >= 5) {
+    TDN[3] =  1.0;
+    T[3] = 5;
+    CptT[3] = false;
+    MotClignotant = 1;
     valMemo = 1;
+  }
+
+  if (!digitalRead(pin2) && MotClignotant == 1 ) {
+    CptT[4] = true;
+  }
+  else {
+    T[4] =  0.0;
+    TDN[4] =  0.0;
+    T[4]  = 0.0;
+  }
+  if (T[4] >= 10) {
+    TDN[4] =  1.0;
+    T[4] = 10;
+    CptT[4] = false;
+    MotClignotant = 0;
+    valMemo = 0;
+  }
+
+  if (!digitalRead(pin2) && MotClignotant == 0) {
+    digitalWrite(13, HIGH);
+  }
+  else {
+    digitalWrite(13, LOW);
   }
 
   // gestion comm RS232
@@ -267,6 +308,19 @@ valTest= digitalRead(pin52);
         Tram = "";
         Index = 0;
       }
+
+
+      if (chaineReceptionProc.substring(0, 5) == "TOPLC")  {
+        delay(500);
+        Serial.println("okokok/");
+
+        Buffer[0] = 0x11;
+        Buffer[1] = 0x46;
+        //int retour=Client.WriteArea(S7AreaDB, 1, 0, 2, &Buffer);
+         Client.WriteArea(S7AreaDB, 1, 0, 2, &Buffer);
+        //Serial.println(retour);
+      }
+
       //Serial.println(chaineReceptionProc);
       chaineReceptionProc = "";
     }
@@ -276,6 +330,8 @@ valTest= digitalRead(pin52);
 
     }
   }
+
+
 
   //demande lecture
   if (!digitalRead(pin2) and valMemo == 0 and SQLecture == 0) {
@@ -318,9 +374,9 @@ valTest= digitalRead(pin52);
             valMemo = 0;
             Serial.println("case 2 Fin:.....");
             delay(1);
-            digitalWrite(pin13, LOW);
+            //digitalWrite(pin13, LOW);
             delay(1);
-            digitalWrite(pin13, HIGH);
+            //digitalWrite(pin13, HIGH);
           }
           else {
             SQLecture = 1;
@@ -455,6 +511,12 @@ void callback() {
   if (CptT[2]) {
     T[2] =  T[2] + 1.0;
   }
+  if (CptT[3]) {
+    T[3] =  T[3] + 1.0;
+  }
+  if (CptT[4]) {
+    T[4] =  T[4] + 1.0;
+  }
 }
 
 //-------------------------------------------------------
@@ -487,11 +549,13 @@ void Ecriture() {
       }
 
       if (chaineReceptionTBL.substring(0, 9) == "BPWriteON")  {
+        Serial.println(chaineReceptionTBL.substring(0, 9));
         NumeroDB = chaineReceptionTBL.substring(9).toInt();
         //Construction du buffer
         Serial.println(NumeroDB);
-        Buffer[0] = 69;
-        Client.WriteArea(S7AreaDB, NumeroDB, 0, 50, &Buffer);
+        Buffer[0] = 0x01;
+        Buffer[1] = 0x46;
+        Client.WriteArea(S7AreaDB, NumeroDB, 0, 2, &Buffer);
 
 
       }
@@ -514,8 +578,8 @@ void Ecriture() {
       if (chaineReceptionTBL == "LU")  {
         LU = 1;
       }
-      Serial.println(chaineReceptionTBL.substring(0, 9));
-      Serial.println (chaineReceptionTBL);
+      //Serial.println(chaineReceptionTBL.substring(0, 9));
+      //Serial.println (chaineReceptionTBL);
       //      Serial.print("SYNCHRO:");
       //      Serial.println(SYNCHRO);
       //      Serial.print("LU:");
@@ -558,4 +622,6 @@ void Lecture() {
 
   }
   //delay(1);
-}
+}//-------------------------------------------------
+
+

@@ -145,6 +145,12 @@ void setup() {
     .setColorActive(color(0))
     .setColorForeground(color(255, 100, 0))
     ;
+    
+    cp5.addBang("TO PLC")
+    .setPosition(600, 500)
+    .setSize(80, 20)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    ;
 
   l.getCaptionLabel().toUpperCase(true);
   l.getCaptionLabel().set("DB NAME:");
