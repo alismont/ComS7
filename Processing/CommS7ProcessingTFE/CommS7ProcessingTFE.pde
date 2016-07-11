@@ -1,5 +1,5 @@
-// TFE Brahim CR2ATION //<>//
-import processing.serial.*; //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
+// TFE Brahim CR2ATION //<>// //<>//
+import processing.serial.*; //<>// //<>// //<>// //<>// //<>// //<>// //<>// //<>//
 import controlP5.*; // importe la librairie GUI controlP5
 /**
  * ControlP5 Textfield
@@ -145,8 +145,8 @@ void setup() {
     .setColorActive(color(0))
     .setColorForeground(color(255, 100, 0))
     ;
-    
-    cp5.addBang("TO PLC")
+
+  cp5.addBang("TOPLC")
     .setPosition(600, 500)
     .setSize(80, 20)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
@@ -291,9 +291,7 @@ public void Transmission() {
       } else {
 
         //myPort.write(i+'/');
-        myPort.write(line+'/');
-        println(line);
-        i++;
+          i++;
       }
     }
   }
@@ -410,4 +408,9 @@ public void SAVE() {
     }
   }
   output.close(); // Finishes the file
+}
+
+public void TOPLC() {
+  myPort.write("TOPLC/");
+  println("TOPLC/");
 }

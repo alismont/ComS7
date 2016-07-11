@@ -33,7 +33,7 @@
 
 File myFile;
 int i = 0;
-int val = 0, valMemo = 0, valTest = 0;
+int val = 0, valMemo = 0, valTest = 0, valEcritureMemo = 0;
 bool Oneshot1 = false;
 int DBs;
 int Buf;
@@ -86,6 +86,8 @@ int MessOut = 0;
 
 S7Client Client;
 unsigned long Elapsed; // To calc the execution time
+
+
 //----------------------------------------------------------------------
 // Setup : Init Ethernet and Serial port
 //----------------------------------------------------------------------
@@ -143,6 +145,23 @@ bool Connect()
     Serial.println("Connection error");
   return Result == 0;
 }
+
+
+
+//----------------------------------------------------------------------
+// Buffer VERS plc
+//----------------------------------------------------------------------
+void DumpVersPLC(void *Buffer, int Length)
+{
+
+
+}
+
+
+
+
+
+
 //----------------------------------------------------------------------
 // Dumps a buffer
 //----------------------------------------------------------------------
@@ -190,21 +209,19 @@ void CheckError(int ErrNo)
     Client.Disconnect();
   }
 }
-//----------------------------------------------------------------------
+//----------------------
 // Profiling routines
 //
 void MarkTime()
 {
   Elapsed = millis();
-}
-//----------------------------------------------------------------------
-void ShowTime()
-{
   // Calcs the time
   Elapsed = millis() - Elapsed;
   Serial.print("Job time (ms) : ");
   Serial.println(Elapsed);
 }
+
+
 
 //----------------------------------------------------------------------
 // Main Loop
@@ -280,6 +297,7 @@ void loop()
     digitalWrite(13, LOW);
   }
 
+
   // gestion comm RS232
   while (Serial.available() > 0) { // si un caractère en réception
 
@@ -313,12 +331,13 @@ void loop()
       if (chaineReceptionProc.substring(0, 5) == "TOPLC")  {
         delay(500);
         Serial.println("okokok/");
+        valEcritureMemo = 1;
 
-        Buffer[0] = 0x11;
-        Buffer[1] = 0x46;
-        //int retour=Client.WriteArea(S7AreaDB, 1, 0, 2, &Buffer);
-         Client.WriteArea(S7AreaDB, 1, 0, 2, &Buffer);
-        //Serial.println(retour);
+        //Buffer[0] = 04;
+        //Buffer[1] = 15;
+        ////int retour=Client.WriteArea(S7AreaDB, 1, 0, 2, &Buffer);
+        //Client.WriteArea(S7AreaDB, 1, 0, 2, &Buffer);
+        //Serial.println("retour");
       }
 
       //Serial.println(chaineReceptionProc);
@@ -331,7 +350,54 @@ void loop()
     }
   }
 
-
+  ////demande Ecriture
+  //    if (digitalRead(pin2) and valEcritureMemo == 1 and SQEcriture == 0) {
+  //
+  ////Pas A pas Ecriture
+  //  if (PasApasEcr == 0) {
+  //    if (valEcritureMemo == 1 ) {
+  //      SDRead();
+  //
+  //        switch (SQEcriture) {
+  //        case 0:
+  //          if (TblDBs[0] > 0) {
+  //            NBRsSQ = 1;
+  //            SQEcriture = 1;
+  //            Serial.print("case 0:...Ecriture");
+  //            Serial.print(TblDBs[0]);
+  //            delay(1);
+  //          }
+  //
+  //          break;
+  //        case 1:
+  //          DBs = TblDBs[NBRsSQ];
+  //          SQEcriture = 2;
+  //          Serial.print("case 1:...Ecriture.");
+  //          Serial.print(DBs);
+  //          delay(1);
+  //          SenttiminoEcriture();
+  //          break;
+  //        case 2:
+  //          NBRsSQ++;
+  //          if (NBRsSQ > TblDBs[0]) {
+  //            SQEcriture = 0;
+  //            valEcritureMemo = 0;
+  //            Serial.println("case 2 Fin:.....");
+  //            delay(1);
+  //            //digitalWrite(pin13, LOW);
+  //            delay(1);
+  //            //digitalWrite(pin13, HIGH);
+  //          }
+  //          else {
+  //            SQEcriture = 1;
+  //            Serial.print("case 2 else:.....");
+  //            delay(1);
+  //          }
+  //          break;
+  //      }
+  //    }
+  // }
+  //-------------------------------------
 
   //demande lecture
   if (!digitalRead(pin2) and valMemo == 0 and SQLecture == 0) {
@@ -394,9 +460,46 @@ void loop()
   Ecriture ();// tablette vers arduino
   Lecture (); // arduino vers tablette
 }
+
 //------------------------------------------------------
-void Senttimino()
-{
+//void SenttiminoEcriture() {
+//
+//
+//  uint16_t Size;
+//  int Result;
+//  Size = sizeof(Buffer);
+//
+//  // Connection
+//  while (!Client.Connected)
+//  {
+//    if (!Connect())
+//      delay(500);
+//  }
+//
+//  Serial.print("Uploading DB:");
+//  Serial.println(DBs);
+//  // Get the current tick
+//  MarkTime();
+//  Result = Client.DBGet(DBs,     // DB Number = 1
+//                        &Buffer, // Our Buffer
+//                        &Size);  // In input contains our buffer size
+//  // As output contains the data read
+//  if (Result == 0)
+//  {
+//    ShowTime();
+//    Dump(&Buffer, Size);
+//
+//    SDWriteFile();
+//  }
+//  else {
+//    CheckError(Result);
+//  }
+//}
+
+
+//------------------------------------------------------
+void Senttimino() {
+
 
   uint16_t Size;
   int Result;
@@ -419,7 +522,7 @@ void Senttimino()
   // As output contains the data read
   if (Result == 0)
   {
-    ShowTime();
+    //ShowTime();
     Dump(&Buffer, Size);
 
     SDWriteFile();
@@ -452,8 +555,8 @@ void SDWrite() {
   }
   PasApas = 0;
 }
-
-
+//-----------------------------------------------
+//Lecture DBs avec Nbrs de DB & diff numero de DB
 void SDRead()
 {
   myFile = SD.open("DBs.txt");
@@ -506,6 +609,30 @@ void SDWriteFile() {
   }
   PasApas = 0;
 }
+
+//------------------------------------------------------
+//void SDReadFile() {
+//  NumDB = "DB" + String(DBs, HEX) + ".TXT";
+//
+//  myFile = SD.open(NumDB, FILE_WRITE);
+//  myFile.seek(0);
+//  // if the file opened okay, write to it:
+//  if (myFile) {
+//
+//    for (int i = 0; i <= IndFile; i++) {
+//
+//      myFile.println(Buffer[i]);
+//      myFile.read(Buffer[i]);
+//    }
+//    myFile.close();
+//  }
+//  else {
+//    // if the file didn't open, print an error:
+//    //Serial.println("error opening NumDB.txt/");
+//  }
+//  PasApas = 0;
+//}
+
 //-------------------------------------------------------
 void callback() {
   if (CptT[2]) {
@@ -548,20 +675,6 @@ void Ecriture() {
         LU = 1;
       }
 
-      if (chaineReceptionTBL.substring(0, 9) == "BPWriteON")  {
-        Serial.println(chaineReceptionTBL.substring(0, 9));
-        NumeroDB = chaineReceptionTBL.substring(9).toInt();
-        //Construction du buffer
-        Serial.println(NumeroDB);
-        Buffer[0] = 0x01;
-        Buffer[1] = 0x46;
-        Client.WriteArea(S7AreaDB, NumeroDB, 0, 2, &Buffer);
-
-
-      }
-
-      if (chaineReceptionTBL == "BPWriteOFF")  {
-      }
 
       //synchro off
       if (chaineReceptionTBL == "SYNCHROFF")  {
