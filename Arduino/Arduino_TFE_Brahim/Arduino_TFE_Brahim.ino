@@ -68,11 +68,12 @@ byte mac[] = {
 
 IPAddress Local(192, 168, 1, 20); // Local Address
 IPAddress PLC(192, 168, 1, 10); // PLC Address
-int SQLecture;
+int SQLecture = 0;
+int SQEcriture = 0;
 int NBRsSQ;
 byte Buffer[1024];
 int TblDBs[200], Index, PasApas = 0;
-
+int PasApasEcr = 0;
 int pin2 = 2;
 int pin13 = 13;
 int pin52 = 52;
@@ -156,11 +157,6 @@ void DumpVersPLC(void *Buffer, int Length)
 
 
 }
-
-
-
-
-
 
 //----------------------------------------------------------------------
 // Dumps a buffer
@@ -350,53 +346,49 @@ void loop()
     }
   }
 
-  ////demande Ecriture
-  //    if (digitalRead(pin2) and valEcritureMemo == 1 and SQEcriture == 0) {
-  //
-  ////Pas A pas Ecriture
-  //  if (PasApasEcr == 0) {
-  //    if (valEcritureMemo == 1 ) {
-  //      SDRead();
-  //
-  //        switch (SQEcriture) {
-  //        case 0:
-  //          if (TblDBs[0] > 0) {
-  //            NBRsSQ = 1;
-  //            SQEcriture = 1;
-  //            Serial.print("case 0:...Ecriture");
-  //            Serial.print(TblDBs[0]);
-  //            delay(1);
-  //          }
-  //
-  //          break;
-  //        case 1:
-  //          DBs = TblDBs[NBRsSQ];
-  //          SQEcriture = 2;
-  //          Serial.print("case 1:...Ecriture.");
-  //          Serial.print(DBs);
-  //          delay(1);
-  //          SenttiminoEcriture();
-  //          break;
-  //        case 2:
-  //          NBRsSQ++;
-  //          if (NBRsSQ > TblDBs[0]) {
-  //            SQEcriture = 0;
-  //            valEcritureMemo = 0;
-  //            Serial.println("case 2 Fin:.....");
-  //            delay(1);
-  //            //digitalWrite(pin13, LOW);
-  //            delay(1);
-  //            //digitalWrite(pin13, HIGH);
-  //          }
-  //          else {
-  //            SQEcriture = 1;
-  //            Serial.print("case 2 else:.....");
-  //            delay(1);
-  //          }
-  //          break;
-  //      }
-  //    }
-  // }
+  //demande Ecriture
+  if (digitalRead(pin2) and valEcritureMemo == 1) {
+
+    //Pas A pas Ecriture
+    if (PasApasEcr == 0) {
+      if (valEcritureMemo == 1 ) {
+        SDRead();
+
+        switch (SQEcriture) {
+          case 0:
+            if (TblDBs[0] > 0) {
+              NBRsSQ = 1;
+              SQEcriture = 1;
+              Serial.print("case 0:...Ecriture");
+              Serial.print(TblDBs[0]);
+              delay(1);
+            }
+            break;
+          case 1:
+            DBs = TblDBs[NBRsSQ];
+            SQEcriture = 2;
+            Serial.print("case 1:...Ecriture.");
+            Serial.print(DBs);
+            delay(1);
+            //SenttiminoEcriture();
+            break;
+          case 2:
+            NBRsSQ++;
+            if (NBRsSQ > TblDBs[0]) {
+              SQEcriture = 0;
+              valEcritureMemo = 0;
+              Serial.println("case 2 Fin:.....");
+            }
+            else {
+              SQEcriture = 1;
+              Serial.print("case 2 else:.....");
+              delay(1);
+            }
+            break;
+        }
+      }
+    }
+  }
   //-------------------------------------
 
   //demande lecture
